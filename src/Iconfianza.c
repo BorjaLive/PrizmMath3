@@ -23,14 +23,15 @@ void calculate_s2(double Sx, double Sy, int Nx, int Ny, double *s2){
 void start_memory(){
 	int i;
 	
-	main_menu = malloc(5 * sizeof(char*));
-	for (i = 0; i < 5; i++)
+	main_menu = malloc(6 * sizeof(char*));
+	for (i = 0; i < 6; i++)
 	    main_menu[i] = malloc(24 * sizeof(char)); //Importante los dos espacios
 	strcpy(main_menu[0], "  Intervalos confianza");
 	strcpy(main_menu[1], "  Region critica");
 	strcpy(main_menu[2], "  Test Shapiro-Wilks");
 	strcpy(main_menu[3], "  Buscar en tablas");
 	strcpy(main_menu[4], "  Introducir datos");
+	strcpy(main_menu[5], "  Regresion lin sim");
 	
 	
 	intervalos_menu = malloc(7 * sizeof(char*));
@@ -92,6 +93,150 @@ void start_memory(){
 	strcpy(tablas_menu[6], "  T. Valores criticos W");
 }
 
+void menu_regLin(){
+	clearDisplay();
+	int cantidad, i = 0, pos = 3;
+	double cant, datoX, datoY, covarianza = 0, varianzaE, b1, b0;
+	double mediaX = 0, varianzaX = 0, cvarianzaX, mediaY = 0, varianzaY = 0, cvarianzaY;
+	printText(1,1,"Cantidad de datos:");
+	readDouble(1,2, &cant);
+	cantidad = (int)cant;
+	for(; i < cantidad; i++){
+		printText(1,pos,"X:");
+		readDouble(4,pos, &datoX);
+		printText(11,pos,"Y:");
+		readDouble(14,pos, &datoY);
+		pos ++;
+		if(pos == 9){
+			pos = 1;
+			clearDisplay();
+		}
+		mediaX += datoX/cantidad;
+		varianzaX += datoX*datoX/cantidad;
+		mediaY += datoY/cantidad;
+		varianzaY += datoY*datoY/cantidad;
+		covarianza += datoX*datoY/cantidad;
+	}
+	varianzaX -= mediaX*mediaX;
+	cvarianzaX = cantidad*varianzaX/(cantidad-1);
+	varianzaY -= mediaY*mediaY;
+	cvarianzaY = cantidad*varianzaY/(cantidad-1);
+	covarianza -= mediaX*mediaY;
+	b1 = covarianza/varianzaX;
+	b0 = mediaY - b1*mediaX;
+	varianzaE = (cantidad*(varianzaY-varianzaX*b1*b1))/(cantidad-2);
+
+	
+	clearDisplay();
+	printText(1,1,"MediaX:");
+	printDouble(9,1, mediaX, DECIMALS);
+	printText(1,2,"MediaY:");
+	printDouble(9,2, mediaY, DECIMALS);
+	
+	printText(1,4,"VarianzaX:");
+	printDouble(12,4, varianzaX, DECIMALS);
+	printText(1,5,"VarianzaY:");
+	printDouble(12,5, varianzaY, DECIMALS);
+
+	printText(1,7,"C VarianzaX:");
+	printDouble(14,7, cvarianzaX, DECIMALS);
+	printText(1,8,"C VarianzaY:");
+	printDouble(14,8, cvarianzaY, DECIMALS);
+
+	wait();
+	clearDisplay();
+	
+	printText(1,1,"DesviacionX:");
+	printDouble(14,1, sqrt(varianzaX), DECIMALS);
+	printText(1,2,"DesviacionY:");
+	printDouble(14,2, sqrt(varianzaY), DECIMALS);
+
+	printText(1,4,"C DesviacionX:");
+	printDouble(16,4, sqrt(cvarianzaX), DECIMALS);
+	printText(1,5,"C DesviacionY:");
+	printDouble(16,5, sqrt(cvarianzaY), DECIMALS);
+
+	wait();
+	clearDisplay();
+
+	printText(1,1,"Covarianza:");
+	printDouble(13,1, covarianza, DECIMALS);
+	printText(1,3,"VarianzaE:");
+	printDouble(12,3, varianzaE, DECIMALS);
+	printText(1,5,"b1:");
+	printDouble(5,5, b1, DECIMALS);
+	printText(1,7,"b0:");
+	printDouble(5,7, b0, DECIMALS);
+
+	wait();
+	clearDisplay();
+
+	double significacion, t, intervalo;
+
+	printText(1,1,"Contraste hipotesis");
+	printText(1,3,"Significacion:");
+	readDouble(1,4, &significacion);
+
+	table_getTvalue(cantidad-2, 1-(significacion/2), &t);
+	intervalo = sqrt(varianzaE/(varianzaX*cantidad))*t;
+
+	clearDisplay();
+	printText(1,1,"Region critica");
+	printText(1,3,"b1 >");
+	printText(1,4,"b1 <");
+	printDouble(6,3, intervalo, DECIMALS);
+	printDouble(6,4, -intervalo, DECIMALS);
+
+	if(b1 > intervalo || b1 < -intervalo)
+		printTextExt(5,6,TEXT_COLOR_GREEN,"  b1 != 0");
+	else
+		printTextExt(5,6,TEXT_COLOR_RED,"  b1 = 0");
+
+	wait();
+
+	intervalo = sqrt(varianzaE*((1.0/cantidad)+((mediaX*mediaX)/(cantidad*varianzaX))))*t;
+
+	clearDisplay();
+	printText(1,1,"Region critica");
+	printText(1,3,"b0 >");
+	printText(1,4,"b0 <");
+	printDouble(6,3, intervalo, DECIMALS);
+	printDouble(6,4, -intervalo, DECIMALS);
+
+	if(b0 > intervalo || b0 < -intervalo)
+		printTextExt(5,6,TEXT_COLOR_GREEN,"  b0 != 0");
+	else
+		printTextExt(5,6,TEXT_COLOR_RED,"  b0 = 0");
+
+
+	wait();
+	clearDisplay();
+
+	printText(1,1,"Intervalos confianza");
+	printText(1,3,"Significacion:");
+	readDouble(1,4, &significacion);
+
+	table_getTvalue(cantidad-2, 1-(significacion/2), &t);
+	intervalo = sqrt(varianzaE/(varianzaX*cantidad))*t;
+
+	clearDisplay();
+	printText(1,1,"Intervalo confianza");
+	printText(1,3,"b1 >");
+	printText(1,4,"b1 <");
+	printDouble(6,3, b1-intervalo, DECIMALS);
+	printDouble(6,4, b1+intervalo, DECIMALS);
+
+	wait();
+
+	intervalo = sqrt(varianzaE*((1.0/cantidad)+((mediaX*mediaX)/(cantidad*varianzaX))))*t;
+
+	clearDisplay();
+	printText(1,1,"Intervalo confianza");
+	printText(1,3,"b0 >");
+	printText(1,4,"b0 <");
+	printDouble(6,3, b0-intervalo, DECIMALS);
+	printDouble(6,4, b0+intervalo, DECIMALS);
+}
 void menu_testW(){
 	int cantidad, i = 0, pos = 5;
 	double cant, media = 0, varianza = 0, cvarianza, dato, b = 0, a, w, m, significacion;
@@ -121,7 +266,7 @@ void menu_testW(){
 	clearDisplay();
 	quicksort(data, 0, cantidad-1);
 	int k;
-	if(cantidad%2 == 0){	//El truncamiento ya hace esto solo, pero no está de más prevenir.
+	if(cantidad%2 == 0){	//El truncamiento ya hace esto solo, pero no estï¿½ de mï¿½s prevenir.
 		k = cantidad/2;
 	}else{
 		k = (cantidad-1)/2;
@@ -919,7 +1064,7 @@ void menu_intervalos(){
 }
 void menu_main(){
 	clearDisplay();
-	switch(menuSelect(main_menu, 5)){
+	switch(menuSelect(main_menu, 6)){
 		case 0:	//Intervalos de confianza
 			menu_intervalos();
 		break;
@@ -934,6 +1079,9 @@ void menu_main(){
 		break;
 		case 4:	//Introducir datos
 			menu_ingresar();
+		break;
+		case 5:	//Introducir datos para regresion lineal
+			menu_regLin();
 		break;
 		case -1: //Regresar
 		break;

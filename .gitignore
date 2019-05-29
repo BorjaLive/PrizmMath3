@@ -1,3 +1,4 @@
 /build/
 /*.g3a
 /*.bin
+/src/.vscode/
