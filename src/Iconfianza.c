@@ -96,7 +96,7 @@ void start_memory(){
 void menu_regLin(){
 	clearDisplay();
 	int cantidad, i = 0, pos = 3;
-	double cant, datoX, datoY, covarianza = 0, varianzaE, b1, b0;
+	double cant, datoX, datoY, covarianza = 0.0, varianzaE, b1, b0, cofR;
 	double mediaX = 0, varianzaX = 0, cvarianzaX, mediaY = 0, varianzaY = 0, cvarianzaY;
 	printText(1,1,"Cantidad de datos:");
 	readDouble(1,2, &cant);
@@ -125,6 +125,8 @@ void menu_regLin(){
 	b1 = covarianza/varianzaX;
 	b0 = mediaY - b1*mediaX;
 	varianzaE = (cantidad*(varianzaY-varianzaX*b1*b1))/(cantidad-2);
+	cofR = (covarianza*covarianza);
+	cofR /= (varianzaX*varianzaY);
 
 	
 	clearDisplay();
@@ -167,6 +169,18 @@ void menu_regLin(){
 	printDouble(5,5, b1, DECIMALS);
 	printText(1,7,"b0:");
 	printDouble(5,7, b0, DECIMALS);
+
+	wait();
+	clearDisplay();
+
+	printText(1,1,"R2:");
+	printDouble(5,1, cofR, DECIMALS);
+	printText(1,3,"cR2:");
+	printDouble(6,3, 1-(((1-cofR)*(cantidad-1))/(cantidad-2)), DECIMALS);
+
+	printDouble(5,5, (covarianza*covarianza), DECIMALS);
+	printDouble(5,6, (varianzaX*varianzaY), DECIMALS);
+	printDouble(5,7, (covarianza*covarianza)/(varianzaX*varianzaY), DECIMALS);
 
 	wait();
 	clearDisplay();
